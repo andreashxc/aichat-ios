@@ -1,0 +1,32 @@
+name: Source checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+      - name: Validate JSON and local package layout
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          for path in Path('.').rglob('*.json'):
+              json.loads(path.read_text())
+          assert Path('LICENSE').is_file()
+          assert Path('NOTICE').is_file()
+          assert Path('third_party/SwiftLlama/Package.swift').is_file()
+          assert Path('third_party/SwiftLlama/LICENSE').is_file()
+          assert Path('AiChat/AiChat.xcodeproj/project.pbxproj').is_file()
+          print('JSON and local source/package layout checks passed; no app build was run.')
+          PY
+
